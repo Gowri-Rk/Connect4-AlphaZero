@@ -15,6 +15,7 @@ from helpers.data_helper import get_game_data_filenames, read_game_data_from_fil
     get_next_generation_model_dirs
 from helpers.model_helpler import load_best_model_weight
 from Connect4Env.connect4_env import Connect4Env, Player
+from keras.callbacks import TensorBoard
 
 
 logger = getLogger(__name__)
@@ -64,8 +65,12 @@ class OptimizeWorker:
     def train_epoch(self, epochs):
         tc = self.config.trainer
         state_ary, policy_ary, z_ary = self.dataset
+        tensorboard_cb = TensorBoard(log_dir="./logs", batch_size=tc.batch_size, histogram_freq=1)
+
         self.model.model.fit(state_ary, [policy_ary, z_ary],
                              batch_size=tc.batch_size,
+                             shuffle=True,
+                             validation_split=0.02,
                              epochs=epochs)
         steps = (state_ary.shape[0] // tc.batch_size) * epochs
         return steps
